@@ -1,43 +1,34 @@
 package main
 
 import (
-	f "fmt"
+	// f "fmt"
 	"io/ioutil"
 	"math/rand"
 	"os"
+	"path/filepath"
 	"strconv"
-	"strings"
+	// "strings"
 )
 
 func genKeyBank(rootPath string) {
-	var myPacket packet
+	const size = 1000000
 	for i := 0; i < 100; i++ {
 		os.MkdirAll("./"+rootPath+"/"+strconv.Itoa(i), os.ModePerm)
 		for j := 0; j < 100; j++ {
-			myPacket.initRand()
 			k := strconv.Itoa(j)
 			if j < 10 {
 				k = "0" + k
 			}
-			name := strconv.Itoa(myPacket.data[0]) + strconv.Itoa(myPacket.data[1]) + strconv.Itoa(myPacket.data[2])
-			os.Create("./" + rootPath + "/" + strconv.Itoa(i) + "/" + k + "-" + name)
-			firstFile, _ := os.OpenFile("./"+rootPath+"/"+strconv.Itoa(i)+"/"+k+"-"+name, os.O_RDWR, os.ModePerm)
-			formattedPacket := f.Sprintf("%x", myPacket.data[3:])
-			formattedPacket = strings.Replace(formattedPacket, " ", "", -1)
-			firstFile.WriteString(formattedPacket)
+			packet := make([]byte, size)
+			rand.Read(packet)
+			name := strconv.Itoa(int(packet[0]))
+			ioutil.WriteFile("./"+rootPath+"/"+strconv.Itoa(i)+"/"+k+"-"+name, packet, os.ModePerm)
 		}
 	}
 }
 
 type packet struct {
-	data []int
-}
-
-func (slice *packet) initRand() {
-	slice.data = slice.data[:0]
-	for i := 0; i < 1000000; i++ {
-		slice.data = append(slice.data, rand.Intn(10))
-	}
+	data []byte
 }
 
 func InitDB(rootPath string) {
@@ -46,7 +37,39 @@ func InitDB(rootPath string) {
 	allFiles, _ := ioutil.ReadDir(rootPath + "/" + firstFolder)
 	firstFile := allFiles[0].Name()
 	keyData, _ := ioutil.ReadFile(rootPath + "/" + firstFolder + "/" + firstFile)
+	os.Remove(rootPath + "/" + firstFolder + "/" + firstFile)
+	// TODO: Delete the folder if it's empty
 	firstFile = firstFile[3:]
+	// TODO: Check if the folder exists, change name if so...
 	os.MkdirAll(rootPath+"/../"+firstFile, os.ModePerm)
 	ioutil.WriteFile(rootPath+"/../"+firstFile+"/"+firstFile, keyData, os.ModePerm)
+}
+
+func AppendDB(keyBankPath, ID string, MBsize int) {
+	folderSize, _ := DirSize(keyBankPath + "/../" + ID)
+	for wantedSize := int64(MBsize - 1); wantedSize > folderSize; {
+		allFolders, _ := ioutil.ReadDir(keyBankPath)
+		firstFolder := allFolders[0].Name()
+		allFiles, _ := ioutil.ReadDir(keyBankPath + "/" + firstFolder)
+		firstFile := allFiles[0].Name()
+		keyData, _ := ioutil.ReadFile(keyBankPath + "/" + firstFolder + "/" + firstFile)
+		os.Remove(keyBankPath + "/" + firstFolder + "/" + firstFile)
+		firstFile = firstFile[3:]
+		ioutil.WriteFile(keyBankPath+"/../"+ID+"/"+firstFile, keyData, os.ModePerm)
+		folderSize, _ = DirSize(keyBankPath + "/../" + ID)
+	}
+}
+
+func DirSize(path string) (int64, error) {
+	var size int64
+	err := filepath.Walk(path, func(_ string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+		if !info.IsDir() {
+			size += info.Size()
+		}
+		return err
+	})
+	return (size / 1024.0 / 1024.0), err
 }

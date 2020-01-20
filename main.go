@@ -8,5 +8,5 @@ import (
 func main() {
 	f.Printf("Hello, there...\nGeneral Kenobi\n")
 	// genKeyBank("keyBank")
-	InitDB("./keyBank/")
+	AppendDB("./keyBank/", "128", 42)
 }
