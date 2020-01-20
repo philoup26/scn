@@ -6,5 +6,7 @@ import (
 )
 
 func main() {
-	f.Printf("Hello, there...\nGeneral Kenobi")
+	f.Printf("Hello, there...\nGeneral Kenobi\n")
+	// genKeyBank("keyBank")
+	InitDB("./keyBank/")
 }
