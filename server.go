@@ -39,6 +39,10 @@ func InitDB(rootPath string) {
 	keyData, _ := ioutil.ReadFile(rootPath + "/" + firstFolder + "/" + firstFile)
 	os.Remove(rootPath + "/" + firstFolder + "/" + firstFile)
 	// TODO: Delete the folder if it's empty
+	if firstFile == nil{
+		os.Remove(rootPath + "/" + firstFolder)
+	}
+	
 	firstFile = firstFile[3:]
 	// TODO: Check if the folder exists, change name if so...
 	os.MkdirAll(rootPath+"/../"+firstFile, os.ModePerm)
@@ -54,6 +58,10 @@ func AppendDB(keyBankPath, ID string, MBsize int) {
 		firstFile := allFiles[0].Name()
 		keyData, _ := ioutil.ReadFile(keyBankPath + "/" + firstFolder + "/" + firstFile)
 		os.Remove(keyBankPath + "/" + firstFolder + "/" + firstFile)
+		if firstFile == nil{
+			os.Remove(rootPath + "/" + firstFolder)
+		}
+			
 		firstFile = firstFile[3:]
 		ioutil.WriteFile(keyBankPath+"/../"+ID+"/"+firstFile, keyData, os.ModePerm)
 		folderSize, _ = DirSize(keyBankPath + "/../" + ID)
